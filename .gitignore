@@ -1,0 +1,27 @@
+tests/output/
+tests/.dependencies/
+tests/.browser-profile/
+
+# Generated or personal reports; retain only the approved blank PDF template.
+*.pdf
+!/任務績效_公版.pdf
+downloads/
+exports/
+backups/
+*.log
+*.tmp
+
+# Local tooling and browser state.
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+
+# Credentials and local secrets never belong in the public repository.
+.env
+.env.*
+*.pem
+*.key
+credentials*.json
+service-account*.json

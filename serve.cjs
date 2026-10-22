@@ -1,0 +1,5 @@
+// Local static preview. No uploads, database, or external network requests.
+const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
+const root=__dirname,port=Number(process.env.PORT||4173);
+const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.ttf':'font/ttf','.pdf':'application/pdf','.txt':'text/plain; charset=utf-8'};
+http.createServer((req,res)=>{try{const url=new URL(req.url,'http://localhost');const target=path.resolve(root,'.'+decodeURIComponent(url.pathname));if(target!==root&&!target.startsWith(root+path.sep)){res.writeHead(403);return res.end();}const file=fs.existsSync(target)&&fs.statSync(target).isDirectory()?path.join(target,'index.html'):target;fs.readFile(file,(err,bytes)=>{if(err){res.writeHead(404);return res.end('Not found');}res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream','Cache-Control':'no-store'});res.end(bytes);});}catch{res.writeHead(400);res.end();}}).listen(port,'127.0.0.1',()=>console.log(`Local: http://127.0.0.1:${port}/docs/`));
