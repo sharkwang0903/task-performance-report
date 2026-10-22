@@ -31,7 +31,12 @@
   $('copy-task').onclick=()=>{state.tasks.push({...current(),id:crypto.randomUUID()});state.active=state.tasks.length-1;save();renderTask();feedback('已完整複製任務內容。個人基本資料與補充說明仍共用。');$('task-name').focus();};
   $('delete-task').onclick=()=>{if(state.tasks.length===1)return;if(!confirm(`確定刪除任務 ${state.active+1}「${current().name||'未命名'}」？此動作無法復原。`))return;state.tasks.splice(state.active,1);state.active=Math.min(state.active,state.tasks.length-1);save();renderTask();feedback('已刪除任務。');};
   $('clear-all').onclick=()=>{if(!confirm('確定清除所有個人資料、任務與補充說明？此動作無法復原。'))return;try{localStorage.removeItem(KEY);storageBlocked=false;state=fresh();save();render();feedback('已清除所有資料，保留一項空白任務。');}catch(e){feedback('瀏覽器拒絕清除資料，請檢查隱私設定。',true);}};
-  function download(bytes){const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));const a=document.createElement('a');a.href=url;a.download=`任務績效報告_${state.personal.reportWeek||ReportWeek.fromDate(today())}.pdf`;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);}
+  function download(bytes){
+    const name=Array.from(state.personal.reporter.trim().replace(/[<>:"/\\|?*\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g,'_')).slice(0,60).join('').replace(/[.\s]+$/g,'')||'未填姓名';
+    const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'})),a=document.createElement('a');
+    a.href=url;a.download=`${name}的任務績效報告_${state.personal.reportWeek||ReportWeek.fromDate(today())}.pdf`;
+    a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }
   async function output(mode){document.body.classList.add('busy');feedback('正在檢查 A4 容量並產生 PDF，首次載入中文字型可能需要幾秒鐘…');const start=revision;try{
       if(!ReportWeek.range(state.personal.reportWeek))throw Error('請先選擇有效的回報週別。');
       const snapshot=JSON.parse(JSON.stringify(state));const result=await ReportPDF.build(snapshot);
