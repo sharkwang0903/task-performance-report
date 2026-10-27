@@ -2,11 +2,12 @@
   'use strict';
   const KEY='task-performance:v1',BACKUP_KEY='task-performance:backup:before-v3',VERSION=3,$=id=>document.getElementById(id);
   const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
-  const blankTask=()=>({id:crypto.randomUUID(),name:'',grade:'',necessity:'',deadline:'',goal:'',resources:'',team:'',difficulty:'',progress:'',notes:''});
+  const blankTask=()=>({id:crypto.randomUUID(),name:'',grade:'',necessity:'',deadline:'',goal:'',resources:'',team:'',difficulty:'',progress:'',notes:'',excludeFromExport:false});
   const fresh=()=>({version:VERSION,personal:{reporter:'',fillDate:today(),reportWeek:ReportWeek.fromDate(today())},tasks:[blankTask()],active:0,supplement:{review:'',suggestions:''},legacySharedNotes:'',legacyNotesResolved:false});
   let state=fresh(),storageBlocked=false,previewURL,revision=0;
   function read(){try{const raw=localStorage.getItem(KEY);if(!raw)return;const saved=JSON.parse(raw);if(![1,2,VERSION].includes(saved.version)||!Array.isArray(saved.tasks)||!saved.tasks.length)throw Error('資料版本或結構無法辨識');
-    const normalize=(base,source)=>Object.fromEntries(Object.keys(base).map(k=>[k,typeof source?.[k]==='string'?source[k]:base[k]]));
+    // Keep boolean fields as booleans; missing fields and values such as "true" use defaults.
+    const normalize=(base,source)=>Object.fromEntries(Object.keys(base).map(k=>[k,typeof source?.[k]===typeof base[k]?source[k]:base[k]]));
     state={version:VERSION,personal:normalize(state.personal,saved.personal),supplement:normalize(state.supplement,saved.supplement),tasks:saved.tasks.map(t=>{const n=normalize(blankTask(),t);n.id=n.id||crypto.randomUUID();for(const k of ['grade','necessity','difficulty'])if(!ReportPDF.options[k].some(o=>o[0]===n[k]))n[k]='';return n;}),active:Math.max(0,Math.min(saved.tasks.length-1,Number.isInteger(saved.active)?saved.active:0)),legacySharedNotes:typeof saved.legacySharedNotes==='string'?saved.legacySharedNotes:(typeof saved.supplement?.notes==='string'?saved.supplement.notes:''),legacyNotesResolved:saved.version===VERSION&&saved.legacyNotesResolved===true};
     if(saved.version===1)state.personal.reportWeek=ReportWeek.fromDate(saved.personal?.reportDate)||ReportWeek.fromDate(today());
     if(saved.version<VERSION){
@@ -20,8 +21,24 @@
   function save(){revision++;delete document.body.dataset.printReady;$('print-root').replaceChildren();if(storageBlocked)return false;try{localStorage.setItem(KEY,JSON.stringify(state));$('save-status').textContent='已自動儲存';return true;}catch(e){$('save-status').textContent='儲存失敗，請勿關閉頁面';feedback('瀏覽器無法儲存資料（空間不足或隱私設定限制）。內容仍保留於本頁，請先匯出 PDF，避免關閉頁面。',true);return false;}}
   function feedback(message,error=false){$('feedback').textContent=message;$('feedback').classList.toggle('error',error);}
   const current=()=>state.tasks[state.active];
-  function tabs(){const root=$('tabs');root.replaceChildren();state.tasks.forEach((t,i)=>{const b=document.createElement('button');b.id=`tab-${i}`;b.setAttribute('role','tab');b.setAttribute('aria-controls','task-panel');b.setAttribute('aria-selected',String(i===state.active));b.tabIndex=i===state.active?0:-1;b.textContent=t.name.trim()?`任務 ${i+1} · ${t.name}`:`任務 ${i+1}`;b.title=b.textContent;b.onclick=()=>{state.active=i;save();renderTask();};b.onkeydown=e=>{let next=i;if(e.key==='ArrowRight')next=(i+1)%state.tasks.length;else if(e.key==='ArrowLeft')next=(i+state.tasks.length-1)%state.tasks.length;else if(e.key==='Home')next=0;else if(e.key==='End')next=state.tasks.length-1;else return;e.preventDefault();state.active=next;save();renderTask();$(`tab-${next}`).focus();};root.append(b);});$('task-count').textContent=`共 ${state.tasks.length} 項任務 · 資料儲存於此瀏覽器`;$('delete-task').disabled=state.tasks.length===1;$('task-panel').setAttribute('aria-labelledby',`tab-${state.active}`);}
-  function renderTask(){tabs();$('task-heading').textContent=`任務 ${state.active+1} · 填寫內容`;$('task-name').value=current().name;
+  function tabs(){
+    const root=$('tabs');root.replaceChildren();
+    state.tasks.forEach((t,i)=>{
+      const b=document.createElement('button');b.id=`tab-${i}`;
+      b.setAttribute('role','tab');b.setAttribute('aria-controls','task-panel');b.setAttribute('aria-selected',String(i===state.active));b.tabIndex=i===state.active?0:-1;
+      const name=t.name.trim()?`任務 ${i+1} · ${t.name}`:`任務 ${i+1}`;
+      const label=document.createElement('span');label.className='task-tab-name';label.textContent=name;b.append(label);
+      if(t.excludeFromExport===true)b.classList.add('excluded');
+      b.title=name;b.setAttribute('aria-label',t.excludeFromExport===true?`${name}，本次不匯出`:name);
+      b.onclick=()=>{state.active=i;save();renderTask();};
+      b.onkeydown=e=>{let next=i;if(e.key==='ArrowRight')next=(i+1)%state.tasks.length;else if(e.key==='ArrowLeft')next=(i+state.tasks.length-1)%state.tasks.length;else if(e.key==='Home')next=0;else if(e.key==='End')next=state.tasks.length-1;else return;e.preventDefault();state.active=next;save();renderTask();$(`tab-${next}`).focus();};
+      root.append(b);
+    });
+    const count=ReportPDF.selectTasks(state.tasks).length,summary=`目前共有 ${state.tasks.length} 項任務｜本次匯出：${count} 項｜不匯出：${state.tasks.length-count} 項`;
+    if($('export-summary').textContent!==summary)$('export-summary').textContent=summary;
+    $('task-count').textContent=`共 ${state.tasks.length} 項任務 · 資料儲存於此瀏覽器`;$('delete-task').disabled=state.tasks.length===1;$('task-panel').setAttribute('aria-labelledby',`tab-${state.active}`);
+  }
+  function renderTask(){tabs();$('task-heading').textContent=`任務 ${state.active+1} · 填寫內容`;$('task-name').value=current().name;$('exclude-task').checked=current().excludeFromExport===true;
     const root=$('task-fields');root.replaceChildren();const placeholders={goal:'請填寫自己評估的預期成果與具體完成標準',resources:'無需求請填「無」，有需求請具體說明',team:'請填寫參與人員及各自貢獻；個人任務可填獨立執行',progress:'請簡述截至本週已完成的內容、當前狀態與後續待辦'};
     ReportPDF.fields.forEach(([key,label],i)=>{const outer=document.createElement('div');outer.className='field';if(ReportPDF.options[key]){const fs=document.createElement('fieldset'),legend=document.createElement('legend');legend.textContent=`${i+1}. ${label}`;fs.append(legend);const choices=document.createElement('div');choices.className='choices';for(const item of ReportPDF.options[key]){const l=document.createElement('label');l.className='choice';const input=document.createElement('input');input.type='radio';input.name=key;input.value=item[0];input.checked=current()[key]===item[0];input.onchange=()=>{current()[key]=input.value;save();};l.append(input,document.createTextNode(item));choices.append(l);}fs.append(choices);outer.append(fs);}else{const l=document.createElement('label');l.htmlFor=`field-${key}`;l.textContent=`${i+1}. ${label}`;const input=document.createElement(key==='deadline'?'input':'textarea');input.id=`field-${key}`;input.value=current()[key];if(key==='deadline'){input.type='date';input.className='date-field';}else{input.rows=3;input.placeholder=placeholders[key];}input.oninput=()=>{current()[key]=input.value;save();};outer.append(l,input);}root.append(outer);});
     const notesField=document.createElement('div');notesField.className='field';
@@ -41,6 +58,7 @@
   if($('reportWeek').type!=='week'){$('reportWeek').hidden=true;$('week-fallback-label').hidden=false;}
   $('reportWeekDate').oninput=()=>{state.personal.reportWeek=ReportWeek.fromDate($('reportWeekDate').value);$('reportWeek').value=state.personal.reportWeek;updateWeek();save();};
   $('task-name').oninput=()=>{current().name=$('task-name').value;save();tabs();};
+  $('exclude-task').onchange=()=>{current().excludeFromExport=$('exclude-task').checked;save();tabs();};
   $('add-task').onclick=()=>{state.tasks.push(blankTask());state.active=state.tasks.length-1;save();renderTask();$('task-name').focus();};
   $('copy-task').onclick=()=>{state.tasks.push({...current(),id:crypto.randomUUID()});state.active=state.tasks.length-1;save();renderTask();feedback('已完整複製任務內容及本任務備註。個人基本資料與整體回饋仍共用。');$('task-name').focus();};
   $('delete-task').onclick=()=>{if(state.tasks.length===1)return;if(!confirm(`確定刪除任務 ${state.active+1}「${current().name||'未命名'}」？此動作無法復原。`))return;state.tasks.splice(state.active,1);state.active=Math.min(state.active,state.tasks.length-1);save();renderTask();feedback('已刪除任務。');};
@@ -53,13 +71,14 @@
     a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
   }
   async function output(mode){document.body.classList.add('busy');feedback('正在檢查 A4 容量並產生 PDF，首次載入中文字型可能需要幾秒鐘…');const start=revision;try{
+      if(!ReportPDF.selectTasks(state.tasks).length)throw Error(ReportPDF.NO_TASKS_MESSAGE);
       if(!ReportWeek.range(state.personal.reportWeek))throw Error('請先選擇有效的回報週別。');
       const snapshot=JSON.parse(JSON.stringify(state));const result=await ReportPDF.build(snapshot);
       if(start!==revision)throw Error('產生期間資料已變更，請重新點擊匯出以使用最新內容。');
       if(mode==='download')download(result.bytes);
       if(mode==='preview'){if(previewURL)URL.revokeObjectURL(previewURL);previewURL=URL.createObjectURL(new Blob([result.bytes],{type:'application/pdf'}));$('pdf-preview').src=previewURL;$('preview-link').href=previewURL;$('preview-dialog').showModal();}
       if(mode==='print'){$('print-root').innerHTML=result.html;await document.fonts.load('10.5px ReportTC');document.body.dataset.printReady='true';window.print();}
-      feedback(`已完成容量檢查，共 ${result.pageCount} 頁（${snapshot.tasks.length} 項任務）。${mode==='download'?'PDF 已開始下載。':''}`);
+      feedback(`已完成容量檢查，共 ${result.pageCount} 頁（本次匯出 ${result.taskCount} 項任務，${snapshot.tasks.length-result.taskCount} 項不匯出）。${mode==='download'?'PDF 已開始下載。':''}`);
     }catch(e){feedback(e.message||'PDF 產生失敗，請重試。',true);}finally{document.body.classList.remove('busy');}}
   $('preview').onclick=()=>output('preview');$('download').onclick=()=>output('download');$('print').onclick=()=>output('print');$('close-preview').onclick=()=>$('preview-dialog').close();
   // Native Ctrl+P cannot await font/layout validation. Block stale output and direct users to the validated print action.

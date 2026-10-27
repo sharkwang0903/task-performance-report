@@ -1,5 +1,9 @@
 # 本機測試紀錄
 
+2026-10-27 新增「本次不匯出」的資料相容性、六項篩選、數量摘要、列印一致性與回歸測試，見 [EXCLUDE-EXPORT-TEST-REPORT.md](EXCLUDE-EXPORT-TEST-REPORT.md)。
+
+2026-10-27 PDF 緊湊版的參數、修改前後容量比較，以及簡短回饋在極限情況仍可能拆頁的結果，見 [COMPACT-LAYOUT-TEST-REPORT.md](COMPACT-LAYOUT-TEST-REPORT.md)。
+
 最新版（2026-10-27）已將共用備註改為每任務獨立備註，共用區只剩兩項整體回饋。最新測試結果見 [TASK-NOTES-TEST-REPORT.md](TASK-NOTES-TEST-REPORT.md)。以下保留先前版本的測試歷程；補充欄位的舊稱與數量以最新版為準。
 
 ## 發布前隱私檢查

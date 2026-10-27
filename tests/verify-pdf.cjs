@@ -13,7 +13,7 @@ const {pathToFileURL}=require('node:url');
    for(const value of expected)assert(comparable(text).includes(comparable(value)),[name,i,value]);
    if(i===1)for(const value of ['測試同事','English text 123','<script>安全測試</script>'])assert(text.replace(/\s/g,'').includes(value.replace(/\s/g,'')),[name,value]);
    // Text width and coordinates stay within the physical page, including long mixed-language lines.
-   for(const item of content.items){assert(item.transform[4]>=40&&item.transform[4]+item.width<=555,[name,i,item.str]);assert(item.transform[5]>40&&item.transform[5]<810,[name,i,item.str]);}
+   for(const item of content.items){assert(item.transform[4]>=33.5&&item.transform[4]+item.width<=562,[name,i,item.str]);assert(item.transform[5]>33.5&&item.transform[5]<810,[name,i,item.str]);}
   }console.log('PASS '+name+': 頁數、中文英文擷取、評定選項與文字邊界');await doc.destroy();
  }
 })().catch(e=>{console.error(e);process.exit(1);});

@@ -5,3 +5,6 @@
 #tabs button{flex-shrink:0}
 [hidden]{display:none!important}
 .migration-card{border-left:3px solid #8ca9bc}.migration-card textarea[readonly]{background:#f6f9fb}.migration-card button{margin-top:14px}
+.export-choice{background:#f6f9fb;border:1px solid #dce4ea;border-radius:7px;padding:13px 15px;margin-bottom:22px}.export-toggle{display:flex;align-items:center;gap:9px;cursor:pointer}.export-toggle input{width:17px;height:17px;flex:none;margin:0;accent-color:#486f8b}.export-choice .hint{margin:7px 0 0}
+#tabs button{display:flex;align-items:center;gap:6px}.task-tab-name{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#tabs button.excluded{background:#fbe9e7;color:#9c4038}#tabs button.excluded[aria-selected=true]{background:#f4ccc8;color:#84382f;border-color:#b7594e;font-weight:600}
