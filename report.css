@@ -1,0 +1,180 @@
+/* 任務績效公版 v2 | A4 單頁 | VS Code Markdown PDF 與 Chromium 適用 */
+@page {
+  size: A4 portrait;
+  margin: 16mm 15mm 15mm;
+}
+
+:root {
+  --ink: #263645;
+  --muted: #647484;
+  --accent: #486f8b;
+  --accent-pale: #edf3f7;
+  --grid: #cfdae2;
+  --subtle: #f6f9fb;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  color: var(--ink);
+  font-family: "Noto Sans CJK TC", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.markdown-body {
+  font-family: "Noto Sans CJK TC", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: none;
+  padding: 0;
+}
+
+body { width: auto; max-width: none; box-sizing: border-box; }
+
+h1, .markdown-body h1 {
+  margin: 0 0 17px;
+  padding: 0 0 9px;
+  color: #315b78;
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-align: center;
+  border-bottom: 2px solid #8ca9bc;
+  line-height: 1.35;
+}
+
+table, .markdown-body table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+table th, table td, .markdown-body table th, .markdown-body table td {
+  padding: 9px 10px;
+  border: 1px solid var(--grid);
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+table p { margin: 0; }
+table strong { font-weight: 650; }
+
+/* 四欄基本資訊（第一張表） */
+table:first-of-type { margin-bottom: 14px; }
+table:first-of-type th,
+table:first-of-type td {
+  text-align: left;
+  background: #fff;
+  font-weight: 400;
+  padding: 8px 10px;
+}
+table:first-of-type th:nth-child(1),
+table:first-of-type th:nth-child(3),
+table:first-of-type td:nth-child(1),
+table:first-of-type td:nth-child(3) {
+  background: var(--accent-pale);
+  color: #355973;
+  font-weight: 700;
+  width: 14%;
+  white-space: nowrap;
+}
+table:first-of-type th:nth-child(2),
+table:first-of-type td:nth-child(2) { width: 40%; }
+table:first-of-type th:nth-child(4),
+table:first-of-type td:nth-child(4) { width: 32%; }
+
+/* 員工填寫八項（第二張表） */
+table:nth-of-type(2) thead th {
+  background: #dce9f1;
+  color: #294c65;
+  font-weight: 700;
+  padding: 8px 10px;
+  text-align: center;
+  letter-spacing: .06em;
+}
+table:nth-of-type(2) th:nth-child(1),
+table:nth-of-type(2) td:nth-child(1) { width: 8%; text-align: center; }
+table:nth-of-type(2) th:nth-child(2),
+table:nth-of-type(2) td:nth-child(2) { width: 25%; }
+table:nth-of-type(2) th:nth-child(3),
+table:nth-of-type(2) td:nth-child(3) { width: 67%; }
+table:nth-of-type(2) tbody td:nth-child(1) {
+  color: var(--accent);
+  font-weight: 700;
+}
+table:nth-of-type(2) tbody td:nth-child(2) {
+  color: #334b5d;
+  background: var(--subtle);
+}
+table:nth-of-type(2) tbody td { padding: 10px 10px; }
+/* 目標、資源、團隊、進度可自由敘述；適度增加行高 */
+table:nth-of-type(2) tbody tr:nth-child(4) td,
+table:nth-of-type(2) tbody tr:nth-child(5) td,
+table:nth-of-type(2) tbody tr:nth-child(6) td,
+table:nth-of-type(2) tbody tr:nth-child(8) td {
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+
+h3, .markdown-body h3 {
+  margin: 15px 0 7px;
+  color: #375f79;
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 700;
+  padding-left: 10px;
+  border-left: 3px solid #8ca9bc;
+}
+
+/* 補充區僅作用於其後的緊接段落，避免影響主管評定表 */
+h3 + p, .markdown-body h3 + p {
+  margin: 0;
+  border: 1px solid #d9e2e9;
+  padding: 8px 12px;
+  background: #fafcfd;
+  font-size: 14px;
+  line-height: 1.85;
+}
+h3 + p strong, .markdown-body h3 + p strong { color: #3d6279; }
+
+/* 總經理獨立評定區（第三張表） */
+table:nth-of-type(3) { margin-top: 0; font-size: 14px; }
+table:nth-of-type(3) thead th {
+  color: #294c65;
+  background: #e8f0f5;
+  font-weight: 700;
+  text-align: left;
+  padding: 7px 10px;
+}
+table:nth-of-type(3) th:first-child,
+table:nth-of-type(3) td:first-child { width: 25%; }
+table:nth-of-type(3) th:last-child,
+table:nth-of-type(3) td:last-child { width: 75%; }
+table:nth-of-type(3) tbody td { padding: 10px 11px; }
+table:nth-of-type(3) tbody td:first-child {
+  background: var(--subtle);
+  color: #334b5d;
+}
+
+@media print {
+  h1, h3, tr, td, th { break-inside: avoid; }
+  body { padding: 0; }
+}
+
+@media screen {
+  body {
+    max-width: 794px;
+    margin: 28px auto;
+    padding: 32px;
+    box-shadow: 0 2px 18px #18334d18;
+  }
+}

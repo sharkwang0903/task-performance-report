@@ -4,3 +4,4 @@
 /* Keep task labels readable; additional tabs scroll horizontally. */
 #tabs button{flex-shrink:0}
 [hidden]{display:none!important}
+.migration-card{border-left:3px solid #8ca9bc}.migration-card textarea[readonly]{background:#f6f9fb}.migration-card button{margin-top:14px}

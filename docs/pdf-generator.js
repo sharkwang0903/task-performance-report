@@ -26,6 +26,7 @@ window.ReportPDF = (() => {
     return fontBytesPromise;
   }
   async function build(state){
+    if(state.legacySharedNotes?.trim()&&!state.legacyNotesResolved)throw Error('舊版共用備註尚未完成分配。請先將內容分配到適當的本任務備註，再按「已完成分配」後匯出；原文不會自動加入 PDF。');
     if(!window.PDFLib||!window.fontkit)throw Error('PDF 函式庫載入失敗，請確認 vendor 資料夾完整。');
     const doc=await PDFLib.PDFDocument.create();doc.registerFontkit(fontkit);
     // Embed the static TrueType font in full; subsetting this CJK font loses glyphs.
@@ -63,20 +64,23 @@ window.ReportPDF = (() => {
         if(choice)checks(p,key,task[key],M+ws[0]+ws[1]+8,y+pad,ws[2]-16);else lines(p,content,M+ws[0]+ws[1]+8,y+pad);
         y+=h;
       });
+      y+=12;text(p,'本任務備註（選填）',M+9,y,11,colors.accent);y+=21;
+      const noteLines=wrap(task.notes,CW-20),noteHeight=noteLines.length*16.8+16;
+      rect(p,M,y,CW,noteHeight,'#fafcfd');lines(p,noteLines,M+10,y+8);y+=noteHeight;
       y+=15;text(p,'總經理評定（由總經理填寫）',M+9,y,12,colors.accent);y+=24;
       const ws2=[CW*.25,CW*.75];x=M;['評定項目','總經理評定（請勾選一項）'].forEach((s,i)=>{rect(p,x,y,ws2[i],27,colors.pale);text(p,s,x+8,y+6);x+=ws2[i];});y+=27;
       [['result','完成評級'],['timing','完成時限']].forEach(([key,label])=>{const h=checkHeight(key,ws2[1]-16)+16;rect(p,M,y,ws2[0],h,colors.subtle);rect(p,M+ws2[0],y,ws2[1],h,'#ffffff');text(p,label,M+8,y+8);checks(p,key,'',M+ws2[0]+8,y+8,ws2[1]-16);y+=h;});
-      if(y>BOTTOM)errors.push(`任務 ${index+1}「${task.name||'未命名'}」超過 A4 容量約 ${Math.ceil((y-BOTTOM)/16.8)} 行，請縮短任務名稱、回報者或自由文字欄位。`);
+      if(y>BOTTOM)errors.push(`任務 ${index+1}「${task.name||'未命名'}」超過 A4 容量約 ${Math.ceil((y-BOTTOM)/16.8)} 行（包含本任務備註與總經理評定），請縮短本任務備註、任務名稱、回報者或自由文字欄位。`);
       lastTaskBottom=y;
     });
-    const extra=Object.entries(state.supplement).filter(([,v])=>v.trim());
+    const extra=['review','suggestions'].map(key=>[key,state.supplement[key]||'']).filter(([,v])=>v.trim());
     if(extra.length){let p=pages[pages.length-1],y=lastTaskBottom+15;
       // Keep the shared supplement on the final task page whenever there is room.
-      if(y+24+32.8>BOTTOM){p=page();title(p,'補充說明（選填）');y=100;}
-      else{text(p,'補充說明（選填）',M+9,y,12,colors.accent);y+=24;}
+      if(y+24+32.8>BOTTOM){p=page();title(p,'整體回饋（選填）');y=100;}
+      else{text(p,'整體回饋（選填）',M+9,y,12,colors.accent);y+=24;}
       const labelWidth=CW*.25;
-      for(const [key,value] of extra){const label={notes:'備註',review:'自我檢討',suggestions:'對公司的建議'}[key];const list=wrap(value,CW-labelWidth-20);
-        let at=0;while(at<list.length){if(y+32.8>BOTTOM){p=page();title(p,'補充說明（續）');y=100;}
+      for(const [key,value] of extra){const label={review:'自我檢討',suggestions:'對公司的建議'}[key];const list=wrap(value,CW-labelWidth-20);
+        let at=0;while(at<list.length){if(y+32.8>BOTTOM){p=page();title(p,'整體回饋（續）');y=100;}
           const count=Math.max(1,Math.floor((BOTTOM-y-16)/16.8));const chunk=list.slice(at,at+count);const h=chunk.length*16.8+16;
           rect(p,M,y,labelWidth,h,colors.subtle);rect(p,M+labelWidth,y,CW-labelWidth,h,'#fafcfd');
           text(p,label+(at?'（續）':''),M+8,y+8,10.5,colors.accent);lines(p,chunk,M+labelWidth+10,y+8);y+=h;at+=chunk.length;
